@@ -1,0 +1,5 @@
+#!/bin/bash
+
+add-apt-repository ppa:gluster/glusterfs-7 -y
+apt-get install -y glusterfs-client -y
+mount -t glusterfs 10.128.0.4:/file_store /gluster

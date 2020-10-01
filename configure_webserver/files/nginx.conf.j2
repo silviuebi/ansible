@@ -1,0 +1,30 @@
+server { 
+    listen 80;                   #Defines what port Nginx will listen on. In this case, it will listen on port 80, the default port for HTTP
+    root /gluster/www/silviuebinca.ro;   #Defines the document root where the files served by the website are stored.
+    index index.php index.html index.htm index.nginx-debian.html; # Configures Nginx to prioritize serving files named index.php when an index file is requested, if they’re available.     
+    server_name silviuebinca.ro www.silviuebinca.ro;       #Defines which server block should be used for a given request to your server.
+    location / {                 
+#location / — The first location block includes a try_files directive, which checks for the existence of files matching a URI request. If Nginx cannot find the appropriate file, it will return a 404 error.  Inside of the existing location / block, we need to adjust the try_files list so that instead of returning a 404 error as the default option, control is passed to the index.php file with the request arguments.
+        try_files $uri $uri/ /index.php$is_args$args; 
+    } 
+    location ~ \.php$ {     
+#location ~ \.php$ — This location block handles the actual PHP processing by pointing Nginx to the fastcgi-php.conf configuration file and the php7.2-fpm.sock file, which declares what socket is associated with php-fpm
+        include snippets/fastcgi-php.conf; 
+        fastcgi_pass unix:/var/run/php/php7.2-fpm.sock; 
+    } 
+    location ~ /\.ht {         
+#location ~ /\.ht — The last location block deals with .htaccess files, which Nginx does not process. By adding the deny all directive, if any .htaccess files happen to find their way into the document root they will not be served to visitors.
+
+        deny all; 
+    } 
+    location = /favicon.ico { log_not_found off; access_log off; } 
+    location = /robots.txt { log_not_found off; access_log off; allow all; } 
+    location ~* \.(css|gif|ico|jpeg|jpg|js|png)$ { 
+        expires max; 
+        log_not_found off; 
+    } 
+    location /server { 
+        alias /var/www/; 
+        try_files $uri $uri/ /index.php$is_args$args; 
+    } 
+}

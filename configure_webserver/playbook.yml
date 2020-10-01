@@ -1,0 +1,76 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: Install Prerequisites
+      apt: name={{ item }} state=latest force_apt_get=yes
+      loop: [ 'aptitude' ]
+
+    - name: Install Packages
+      apt: name={{ item }} update_cache=yes state=latest
+      loop: [ 'nginx', 'mysql-client', 'php-fpm', 'php-curl', 'php-mysql' , 'php-gd', 'php-intl', 'php-mbstring', 'php-soap', 'php-xml', 'php-xmlrpc', 'php-zip' ]
+    
+#    - name: Add apt repository 
+#      apt_repository:
+#        repo: 'ppa:gluster/glusterfs-7'
+#        state: present
+#        update_cache: no
+#      become: true
+#      register: apt_repository_output
+    
+#    - name: Install Gluster
+#      apt: name={{ item }} update_cache=yes state=latest force_apt_get=yes update_cache=no
+#      loop: [ 'glusterfs-client' ]
+
+
+
+    - name: Creates directory
+      file:
+        path: /gluster
+        state: directory
+        mode: 0755            
+
+    - name: Copies the bash script
+      template:
+        src: "files/bash.j2"
+        dest: "/home/bash.sh"
+
+    - name: Execute the script
+      command: sh /home/bash.sh
+
+
+#    - name: Ensure the Gluster volume is mounted.
+#      mount:
+#        name: "gluster"
+#        src: "10.128.0.4:/file_store"
+#        fstype: glusterfs
+#        state: mounted
+
+
+# Nginx Configuration
+    - name: Sets Nginx conf file
+      template:
+        src: "files/nginx.conf.j2"
+        dest: "/etc/nginx/sites-available/silviuebinca.ro"
+
+    - name: Enables new site
+      file:
+        src: "/etc/nginx/sites-available/silviuebinca.ro"
+        dest: "/etc/nginx/sites-enabled/silviuebinca.ro"
+        state: link
+    
+    - name: Removes "default" site
+      file:
+        path: "/etc/nginx/sites-enabled/default"
+        state: absent
+
+    - name: Sets the server value
+      template:
+        src: "files/index.j2"
+        dest: "/var/www/index.html"
+   
+    - name: restart nginx
+      service: name=nginx state=restarted enabled=yes
