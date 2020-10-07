@@ -12,20 +12,6 @@
     - name: Install Packages
       apt: name={{ item }} update_cache=yes state=latest
       loop: [ 'nginx', 'mysql-client', 'php-fpm', 'php-curl', 'php-mysql' , 'php-gd', 'php-intl', 'php-mbstring', 'php-soap', 'php-xml', 'php-xmlrpc', 'php-zip' ]
-    
-#    - name: Add apt repository 
-#      apt_repository:
-#        repo: 'ppa:gluster/glusterfs-7'
-#        state: present
-#        update_cache: no
-#      become: true
-#      register: apt_repository_output
-    
-#    - name: Install Gluster
-#      apt: name={{ item }} update_cache=yes state=latest force_apt_get=yes update_cache=no
-#      loop: [ 'glusterfs-client' ]
-
-
 
     - name: Creates directory
       file:
@@ -40,15 +26,6 @@
 
     - name: Execute the script
       command: sh /home/bash.sh
-
-
-#    - name: Ensure the Gluster volume is mounted.
-#      mount:
-#        name: "gluster"
-#        src: "10.128.0.4:/file_store"
-#        fstype: glusterfs
-#        state: mounted
-
 
 # Nginx Configuration
     - name: Sets Nginx conf file
@@ -72,5 +49,17 @@
         src: "files/index.j2"
         dest: "/var/www/index.html"
    
-    - name: restart nginx
+    - name: Restart nginx
       service: name=nginx state=restarted enabled=yes
+      
+      
+- hosts: loadbalancer
+  become: true
+  tasks:
+    - name: Updates the loadbalancer file
+      template:
+        src: "files/default.j2"
+        dest: "/etc/nginx/sites-available/default"
+   
+    - name: restart nginx
+        service: name=nginx state=restarted enabled=yes
