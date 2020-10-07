@@ -1,0 +1,24 @@
+# Default server configuration
+#
+#
+
+upstream backend {
+#   server 10.128.0.3;
+#   server 10.128.0.8;
+#   server 10.138.0.4;
+
+{% for host in groups['web'] %}
+   server {{ host }};
+{% endfor %}
+}
+
+# This server accepts all traffic to port 80 and passes it to the upstream.
+
+server {
+   listen 80;
+
+   location / {
+      proxy_pass http://backend;
+      include proxy_params;
+   }
+}
